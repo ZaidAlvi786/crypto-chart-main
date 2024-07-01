@@ -17,6 +17,7 @@ import style from "./index.module.scss";
 import formatToLongDateTime from "../../utils/formatDateToLongDateTime";
 import ModalWrapper from "../modalWrapper/ModalWrapper";
 import approximateToTwoDigits from "../../utils/approximateToTwoDecimal";
+import { formatNumberWithCommas } from "../../utils/formatNumberWithCommas";
 const dateModes = [
   {
     name: "1D",
@@ -102,6 +103,9 @@ const Chart = ({ selectedChart, metaInfo }: any) => {
   const [editCurrenciesIsOpen, setEditCurrenciesIsOpen] = useState(false);
   const [budgetValueBeforeSave, setBudgetValueBeforeSave] = useState(budget);
   const [searchModalIsOpen, setSearchModalIsOpen] = useState(false);
+  const [displayValue, setDisplayValue] = useState<string>(
+    formatNumberWithCommas(budget)
+  );
   const setTimeSeries = useChartDataStore((store) => store.setTimeSeries);
   const editInputRef = useRef(null);
   const changeMode = (selectedMode) => {
@@ -145,6 +149,25 @@ const Chart = ({ selectedChart, metaInfo }: any) => {
     // Focus on the input field when the button is clicked
     if (editInputRef.current) {
       editInputRef.current.focus();
+    }
+  };
+
+  const handleBudgetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/,/g, ""); // Remove commas for a valid number
+
+    // Only allow numbers
+    if (/^\d*$/.test(value)) {
+      const numberValue = Number(value);
+      setBudget(numberValue);
+      setDisplayValue(formatNumberWithCommas(numberValue));
+    } else {
+      setDisplayValue(displayValue); // Keep the current display value if invalid input
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!/^\d*$/.test(e.key)) {
+      e.preventDefault();
     }
   };
   const increasedPercentage = approximateToTwoDigits(
@@ -209,7 +232,7 @@ const Chart = ({ selectedChart, metaInfo }: any) => {
         </div>
         <div className={`${style.row} flexDirectionColumnOnMobileView`}>
           <h2 className={style.priceTitle}>
-            ${currentValue}{" "}
+            ${formatNumberWithCommas(currentValue)}{" "}
             <span
               className={style.highlightedGreen}
               style={{ color: actualChangeIsNegative && "var(--red)" }}
@@ -322,11 +345,13 @@ const Chart = ({ selectedChart, metaInfo }: any) => {
           <div className={style.subRow}>
             <p>Sum invested</p>
             <span>
-              <input
-                value={budget}
+            <input
+                type="text" // Use text type to allow formatting
                 className={style.input}
-                onChange={(e) => setBudget(e.target.value)}
-                ref={editInputRef}
+                value={displayValue}
+                onChange={handleBudgetChange}
+                onKeyPress={handleKeyPress}
+                onFocus={(e) => e.target.select()} // Select all text on focus
               />
               <img src={edit} onClick={() => handleClick()} />
             </span>
@@ -413,7 +438,7 @@ const Chart = ({ selectedChart, metaInfo }: any) => {
               }
             >
               {currency}
-              {gain}
+              {formatNumberWithCommas(gain)}
             </span>
           </div>{" "}
           <div className={style.subRow}>
@@ -428,14 +453,14 @@ const Chart = ({ selectedChart, metaInfo }: any) => {
             >
               {increasedPercentage >= 100 && "+"}
               {increasedPercentage < 100 && "-"}
-              {increasedPercentage}%
+              {formatNumberWithCommas(increasedPercentage)}%
             </span>
           </div>{" "}
           <div className={style.subRow}>
             <p>Total return </p>
             <span>
               {currency}
-              {increasedValue}
+              {formatNumberWithCommas(increasedValue)}
             </span>
           </div>{" "}
           <div className={`${style.subRow} ${style.resetButtonContainer}`}>
@@ -457,18 +482,18 @@ const Chart = ({ selectedChart, metaInfo }: any) => {
           </div>
           <div className={style.subRow}>
             <p>Previous Close</p>
-            <span>${previousClose}</span>
+            <span>${formatNumberWithCommas(previousClose)}</span>
           </div>
           <div className={style.subRow}>
             <p>Day range</p>
             <span>
-              ${dayLow} - ${dayHigh}
+              ${formatNumberWithCommas(dayLow)} - ${formatNumberWithCommas(dayHigh)}
             </span>
           </div>{" "}
           <div className={style.subRow}>
             <p>Year Range </p>
             <span>
-              ${yearLow} - ${yearHigh}
+              ${formatNumberWithCommas(yearLow)} - ${formatNumberWithCommas(yearHigh)}
             </span>
           </div>{" "}
           {marketCap && (

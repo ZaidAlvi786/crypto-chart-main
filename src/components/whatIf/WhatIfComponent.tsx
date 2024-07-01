@@ -1,7 +1,7 @@
 import arrow from "../../assets/arrow.svg";
 import calendar from "../../assets/calendar.svg";
 import search from "../../assets/search.svg";
-import  "./index.module.scss";
+import "./index.module.scss";
 import { FC, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import facebook from "../../assets/facebook 1.svg";
@@ -26,6 +26,7 @@ import TailSpin from "react-loading-icons/dist/esm/components/tail-spin";
 import useGetData from "../../hooks/useGetData";
 import useDebounce from "../../hooks/useDebounce";
 import { useLocation, useNavigate } from "react-router-dom";
+import { formatNumberWithCommas } from "../../utils/formatNumberWithCommas";
 interface Examples {
   name: string;
   img: string;
@@ -40,12 +41,16 @@ function subtractDaysFromDate(dateParam: Date, number: number) {
   return `${year}-${month}-${day}`;
 }
 
-const WhatIfComponent: FC<any> = ({ examples, metaInfo,setStockSearchValue }) => {
+const WhatIfComponent: FC<any> = ({
+  examples,
+  metaInfo,
+  setStockSearchValue,
+}) => {
   const [buycalendarIsOpen, setBuyCalendarIsOpen] = useState(false);
   const [sellcalendarIsOpen, setSellCalendarIsOpen] = useState(false);
   const [currencySelectorIsOpen, setCurrencySelectorIsOpen] = useState(false);
   const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     if (searchTerm) {
@@ -125,20 +130,41 @@ const WhatIfComponent: FC<any> = ({ examples, metaInfo,setStockSearchValue }) =>
     setManualTime(true);
   };
 
-
   const [currentActiveFilter, setCurrentActiveFilter] = useState("stocks");
-  const [searchURL, setSearchURL] = useState('https://api.twelvedata.com/symbol_search?symbol=sssssssssssss');
-  const [queryInput, setQueryInput] = useState('');
+  const [searchURL, setSearchURL] = useState(
+    "https://api.twelvedata.com/symbol_search?symbol=sssssssssssss"
+  );
+  const [queryInput, setQueryInput] = useState("");
   const [searchIsActive, setSearchIsActive] = useState(false);
   const { currentMode, setCurrentMode } = useChartDataStore();
   const setStockSymbol = useChartDataStore((store) => store.setStockSymbol);
   const { data, loading } = useGetData(searchURL);
   const debouncedSearchTerm = useDebounce(queryInput, 500);
-
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
+  const [displayValue, setDisplayValue] = useState<string>(
+    formatNumberWithCommas(budget)
+  );
   const handleInputFocus = () => {
     setIsDropdownOpen(true);
+  };
+
+  const handleBudgetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/,/g, ""); // Remove commas for a valid number
+
+    // Only allow numbers
+    if (/^\d*$/.test(value)) {
+      const numberValue = Number(value);
+      setBudget(numberValue);
+      setDisplayValue(formatNumberWithCommas(numberValue));
+    } else {
+      setDisplayValue(displayValue); // Keep the current display value if invalid input
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!/^\d*$/.test(e.key)) {
+      e.preventDefault();
+    }
   };
 
   const handleInputBlur = () => {
@@ -150,7 +176,9 @@ const WhatIfComponent: FC<any> = ({ examples, metaInfo,setStockSearchValue }) =>
 
   useEffect(() => {
     if (debouncedSearchTerm) {
-      setSearchURL(`https://api.twelvedata.com/symbol_search?symbol=${debouncedSearchTerm}`);
+      setSearchURL(
+        `https://api.twelvedata.com/symbol_search?symbol=${debouncedSearchTerm}`
+      );
       setSearchIsActive(true);
     } else {
       setSearchIsActive(false);
@@ -162,9 +190,11 @@ const WhatIfComponent: FC<any> = ({ examples, metaInfo,setStockSearchValue }) =>
     setCurrentMode(e.target.value);
     setQueryInput("");
     if (e.target.value === "cryptocurrencies") {
-      setSearchURL('https://api.twelvedata.com/cryptocurrencies?exchange=Binance&currency_quote=USD');
+      setSearchURL(
+        "https://api.twelvedata.com/cryptocurrencies?exchange=Binance&currency_quote=USD"
+      );
     } else {
-      setSearchURL('https://api.twelvedata.com/stocks?exchange=NASDAQ');
+      setSearchURL("https://api.twelvedata.com/stocks?exchange=NASDAQ");
     }
     setSearchIsActive(false);
   };
@@ -173,21 +203,24 @@ const WhatIfComponent: FC<any> = ({ examples, metaInfo,setStockSearchValue }) =>
     setQueryInput(e.target.value);
   };
 
-  const handleStockClick = (e) => {
-    setStockSearchValue(e.target.value);
-    
-    setStockSymbol(e.target.value);
+  const handleStockClick = (item) => {
+    console.log(item, "eeeeeeeee");
+
+    const value = `${item.instrument_name} - ${item.exchange}`;
+    console.log(value, "rrrrrrrrrr");
+
+    setQueryInput(value);
+    setStockSymbol(item.symbol);
     if (currentActiveFilter === "stocks") {
-      navigate(`/${encodeURIComponent(e.target.value)}`);
+      navigate(`/${encodeURIComponent(item.symbol)}`);
       setCurrentMode("stocks");
     } else if (currentActiveFilter === "cryptocurrencies") {
-      navigate(`/crypto/${encodeURIComponent(e.target.value)}`);
+      navigate(`/crypto/${encodeURIComponent(item.symbol)}`);
       setCurrentMode("crypto");
     }
   };
 
   const trimmedData = data ? [...data].splice(0, 30) : [];
-
 
   return (
     <>
@@ -262,10 +295,12 @@ const WhatIfComponent: FC<any> = ({ examples, metaInfo,setStockSearchValue }) =>
                 </div>
               </span>{" "}
               <input
-                type="number"
+                type="text" // Use text type to allow formatting
                 className={style.input}
-                value={budget}
-                onChange={(e: any) => setBudget(e.target.value)}
+                value={displayValue}
+                onChange={handleBudgetChange}
+                onKeyPress={handleKeyPress}
+                onFocus={(e) => e.target.select()} // Select all text on focus
               />
             </div>
 
@@ -278,75 +313,76 @@ const WhatIfComponent: FC<any> = ({ examples, metaInfo,setStockSearchValue }) =>
         >
           <h1>in</h1>
           <div className="relative">
-      <div className="flex gap-3 shadow-3xl sm:w-[200px] md:w-[30vw] p-5 rounded-lg">
-       <img src={search} id={style.searchImg} alt="search img" />
-      <input
-        type="text"
-        value={queryInput}
-        onChange={handleQueryInputChange}
-        onFocus={handleInputFocus}
-        onBlur={handleInputBlur}
-        placeholder={metaInfo.searchPlaceholder}
-        className="w-full px-4 py-2 border border-gray-300 rounded"
-      />
-      </div>    
-     
-      {isDropdownOpen && queryInput && (
-        <ul className="absolute z-10 w-[60vw] mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-96 overflow-y-auto">
-          {trimmedData &&
-            !loading &&
-            trimmedData.length > 0 &&
-            !searchIsActive && (
-              <div className="results">
-                {trimmedData?.map((item: any, i: number) => (
-                  <div className="listItem" key={i}>
-                    <button
-                      onClick={handleStockClick}
-                      type="button"
-                      value={item.symbol}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                    >
-                      {currentActiveFilter === "cryptocurrencies"
-                        ? item.currency_base
-                        : item.name}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-          {trimmedData &&
-            !loading &&
-            trimmedData.length > 0 &&
-            searchIsActive && (
-              <div className="results">
-                {trimmedData?.map((item: any, i: number) => (
-                  <div className="listItem" key={i}>
-                    <button
-                      onClick={handleStockClick}
-                      type="button"
-                      value={item.symbol}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                    >
-                      {item.instrument_name} - <span>{item.exchange}</span>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          {loading && (
-            <div className="loadingContainer flex justify-center items-center py-4">
-              <TailSpin
-                stroke="#8f8a8e"
-                fontSize={50}
-                className="loadingIcon"
-                strokeWidth={2}
+            <div className="flex gap-3 shadow-3xl sm:w-[200px] md:w-[30vw] p-5 rounded-lg">
+              <img src={search} id={style.searchImg} alt="search img" />
+              <input
+                type="text"
+                value={queryInput}
+                onChange={handleQueryInputChange}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
+                placeholder={metaInfo.searchPlaceholder}
+                className="w-full px-4 py-2 border border-gray-300 rounded"
               />
             </div>
-          )}
-        </ul>
-      )}
-    </div>
+
+            {isDropdownOpen && queryInput && (
+              <ul className="absolute z-10 w-[60vw] mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-96 overflow-y-auto">
+                {trimmedData &&
+                  !loading &&
+                  trimmedData.length > 0 &&
+                  !searchIsActive && (
+                    <div className="results">
+                      {trimmedData?.map((item: any, i: number) => (
+                        <div className="listItem" key={i}>
+                          <button
+                            onClick={() => handleStockClick(item)}
+                            type="button"
+                            value={item.symbol}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                          >
+                            {currentActiveFilter === "cryptocurrencies"
+                              ? item.currency_base
+                              : item.name}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                {trimmedData &&
+                  !loading &&
+                  trimmedData.length > 0 &&
+                  searchIsActive && (
+                    <div className="results">
+                      {trimmedData?.map((item: any, i: number) => (
+                        <div className="listItem" key={i}>
+                          <button
+                            onClick={() => handleStockClick(item)}
+                            type="button"
+                            value={item.symbol}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                          >
+                            {item.instrument_name} -{" "}
+                            <span>{item.exchange}</span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                {loading && (
+                  <div className="loadingContainer flex justify-center items-center py-4">
+                    <TailSpin
+                      stroke="#8f8a8e"
+                      fontSize={50}
+                      className="loadingIcon"
+                      strokeWidth={2}
+                    />
+                  </div>
+                )}
+              </ul>
+            )}
+          </div>
           <h1 className="removeOnMobileView">on this day</h1>
           <div
             className={` pale-button removeOnMobileView`}
@@ -430,7 +466,7 @@ const WhatIfComponent: FC<any> = ({ examples, metaInfo,setStockSearchValue }) =>
               Your{" "}
               <strong className={style.highlightedBlack}>
                 {currency}
-                {budget}
+                {formatNumberWithCommas(budget)}
               </strong>{" "}
             </div>
             <div>would have</div>
@@ -445,7 +481,7 @@ const WhatIfComponent: FC<any> = ({ examples, metaInfo,setStockSearchValue }) =>
                 }
               >
                 {currency}
-                {increasedValue}
+                {formatNumberWithCommas(increasedValue)}
               </strong>
             </div>
             <span
@@ -457,7 +493,7 @@ const WhatIfComponent: FC<any> = ({ examples, metaInfo,setStockSearchValue }) =>
               id={style.increasePercentageButton}
             >
               {increasedPercentage >= 100 ? "+" : "-"}
-              {increasedPercentage}%
+              {formatNumberWithCommas(increasedPercentage)}%
             </span>
           </h1>
         </div>
