@@ -1,33 +1,66 @@
-import { Route, Routes } from "react-router-dom";
+import React, { useEffect, useRef } from "react";
+import { Route, Routes, useLocation, useNavigate, Navigate } from "react-router-dom";
 import Crypto from "./pages/Crypto";
 import Stocks from "./pages/Stocks";
+
+// Define a type guard to check if a performance entry is of type PerformanceNavigationTiming
+function isNavigationTiming(entry: PerformanceEntry): entry is PerformanceNavigationTiming {
+  return entry.entryType === "navigation";
+}
 
 const routes = [
   {
     element: <Stocks />,
-    route: "/",
+    path: "/",
   },
   {
     element: <Stocks />,
-    route: "/:symbol",
+    path: "/:symbol",
   },
   {
     element: <Crypto />,
-    route: "/crypto/:symbol",
+    path: "/crypto/:symbol",
   },
   {
     element: <Crypto />,
-    route: "/crypto",
+    path: "/crypto",
   },
 ];
-function App() {
+
+const App: React.FC = () => {
+  const pathToRegex = (path: string) => {
+    return new RegExp(`^${path.replace(/:\w+/g, "\\w+")}$`);
+  };
+
+  const location = useLocation();
+  const navigate = useNavigate();
+  const initialRender = useRef(true); // useRef to track initial render
+
+  useEffect(() => {
+    // Check if the current location matches any of the defined routes
+    const isValidPath = routes.some(route =>
+      pathToRegex(route.path).test(location.pathname)
+    );
+
+    // Redirect to main page only on refresh and if path is not valid
+   
+
+    // Update initialRender after first render
+    initialRender.current = false;
+    if (!isValidPath && !initialRender.current) {
+      navigate("/");
+    }
+  }, [location.pathname, navigate]);
+
   return (
     <Routes>
       {routes.map((route, i) => (
-        <Route element={route.element} path={route.route} key={i} />
+        <Route element={route.element} path={route.path} key={i} />
       ))}
+      {/* 404 route - This will match any unmatched route */}
+      <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
-}
+};
 
 export default App;
