@@ -9,6 +9,7 @@ type ChartGridValueAndData = {
   label: string;
   xPosition: number;
 };
+
 interface ChartDataStore {
   budget: number;
   buyDate: Date;
@@ -17,9 +18,10 @@ interface ChartDataStore {
   sellDateDisplay: Date;
   selectedItem: string;
   currency: string;
-  data: unknown; // Define type according to your fetched data structure
-  stockDetails: unknown; // Define type according to your fetched data structure
+  data: any; // Define type according to your fetched data structure
+  stockDetails: any; // Define type according to your fetched data structure
   chartError: null | string;
+  errorPopup: null | string;
   timeSeries: Interval;
   loading: boolean;
   stockSymbol: string;
@@ -31,17 +33,16 @@ interface ChartDataStore {
   chartGridValuesAndData: ChartGridValueAndData[];
   buyData: ChartGridValueAndData;
   sellData: ChartGridValueAndData;
-  dataReloadTrigger: Boolean;
+  dataReloadTrigger: boolean;
   getData: () => Promise<void>;
   setBudget: (amount: number) => void;
   setBuyDate: (buyDate: Date) => void;
   setSellDate: (sellDate: Date) => void;
   setBuyDateDisplay: (buyDateDisplay: Date) => void;
-  setSellDateDisplay: (SellDateDisplay: Date) => void;
-
+  setSellDateDisplay: (sellDateDisplay: Date) => void;
   setManualTime: (manualTime: boolean) => void;
   setCurrency: (currency: string) => void;
-  setTimeSeries: (timeSeries: string) => void;
+  setTimeSeries: (timeSeries: Interval) => void;
   setStockSymbol: (stockSymbol: string) => void;
   setCurrentMode: (currentMode: string) => void;
   setSellData: (sellIndex: number) => void;
@@ -49,8 +50,10 @@ interface ChartDataStore {
   setChartGridValuesAndData: (
     chartGridValuesAndData: ChartGridValueAndData[]
   ) => void;
-  setChartError: (err: string) => void;
+  setChartError: (err: string | null) => void;
+  setErrorPopup: (err: string | null) => void;
 }
+
 // Create Zustand store
 const useChartDataStore = create<ChartDataStore>((set, get) => ({
   budget: 130000,
@@ -69,6 +72,7 @@ const useChartDataStore = create<ChartDataStore>((set, get) => ({
   chartGridValuesAndData: [],
   buyIndex: 0,
   chartError: null,
+  errorPopup: null,
   sellIndex: 60,
   buyDateDisplay: new Date(),
   sellDateDisplay: new Date(),
@@ -112,7 +116,9 @@ const useChartDataStore = create<ChartDataStore>((set, get) => ({
               Authorization: import.meta.env.VITE_API_KEY as string,
             },
           })
-          .catch((err) => console.log(err, "error inside")),
+          .catch((err) => {
+            throw new Error("Failed to fetch data");
+          }),
         axios.get(`https://api.twelvedata.com/quote?symbol=${stockSymbol}`, {
           headers: {
             Authorization: import.meta.env.VITE_API_KEY as string,
@@ -123,28 +129,32 @@ const useChartDataStore = create<ChartDataStore>((set, get) => ({
             Authorization: import.meta.env.VITE_API_KEY as string,
           },
         }),
-      ]); // Set the fetched data to the store's state
+      ]);
+
+      // Set the fetched data to the store's state
       const logoUrlToBeSet =
         currentMode === "stocks"
           ? logoUrlResponse.data.url
           : logoUrlResponse.data.logo_base;
-      console.log(chartdetails, "re");
 
       set({
         data: chartdetails?.data,
         stockDetails: stockDetails.data,
         logoUrl: logoUrlToBeSet,
         chartError: null,
+        errorPopup: null,
       });
-      // if (chartdetails.data.status === "ok") {
-      //   set({ chartError: null });
-      // }
+
       if (chartdetails.data.status === "error") {
         const errorMessage = chartdetails.data.message;
+      
         set({ chartError: errorMessage });
+        set({ errorPopup: `${stockSymbol}/${exchangeQuery}/${formattedStartDate}` });
+        
       }
     } catch (error) {
       console.error("Error fetching stock data:", error);
+      set({ chartError: "Failed to fetch data" });
     } finally {
       set({ loading: false });
     }
@@ -164,7 +174,6 @@ const useChartDataStore = create<ChartDataStore>((set, get) => ({
   setSellDateDisplay: (sellDateDisplay) => {
     set({ sellDateDisplay });
   },
-
   setManualTime: (manualTime) => {
     set({ manualTime });
   },
@@ -203,8 +212,11 @@ const useChartDataStore = create<ChartDataStore>((set, get) => ({
   setChartGridValuesAndData: (chartGridValuesAndData) => {
     set({ chartGridValuesAndData });
   },
-  setChartError: (err: string) => {
+  setChartError: (err) => {
     set({ chartError: err });
+  },
+  setErrorPopup: (err) => {
+    set({ errorPopup: err });
   },
 }));
 

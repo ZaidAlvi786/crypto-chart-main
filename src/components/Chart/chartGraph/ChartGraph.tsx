@@ -27,6 +27,8 @@ import formatDate from "../../../utils/formateDate";
 import replaceLargestDifferentUnit from "../../../utils/formateDateForLabels";
 import type { ChartOptions } from "chart.js";
 import encodeDates from "../../../utils/formateDateTest";
+import { ToastContainer, toast, Bounce } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 Chart.register(
   CategoryScale,
   LinearScale,
@@ -100,6 +102,7 @@ const options: ChartOptions = {
 export default function ChartGraph() {
   const [coordinates, setCoordinates] = useState(null);
   const [linesLoading, setLinesLoading] = useState(true);
+  const [showToast, setShowToast] = useState(false); // State to control toast visibility
   const chartRef = useRef(null);
   const {
     loading,
@@ -108,22 +111,50 @@ export default function ChartGraph() {
     data,
     chartGridValuesAndData,
     chartError,
+    errorPopup,
   } = useChartDataStore();
+  
+  // Show toast if errorPopup is present
+  useEffect(() => {
+    if (errorPopup !== null || data?.status !==null) {
+      toast.error(`No data from Twelvedata for the selected ${errorPopup}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        transition: Bounce,
+      });
+      setShowToast(true); // Show the toast
+    }
+  }, [errorPopup]);
+
+  // Handle toast close
+  const handleToastClose = () => {
+    setShowToast(false); // Close the toast
+  };
 
   const ToDrawlabels = useMemo(() => {
-    return data?.values
-      ?.map((item) => {
-        if (timeSeries === "1day")
-          return `${new Date(item.datetime).getHours()}:${new Date(
-            item.datetime
-          ).getMinutes()}`;
-        return formatDate(new Date(item.datetime));
-      })
-      .reverse();
+    return (
+      data?.values
+        ?.map((item) => {
+          if (timeSeries === "1day")
+            return `${new Date(item.datetime).getHours()}:${new Date(
+              item.datetime
+            ).getMinutes()}`;
+          return formatDate(new Date(item.datetime));
+        })
+        .reverse()
+    );
   }, [data?.values, timeSeries]);
+
   const toDrawValues = useMemo(() => {
     return data?.values?.map((item) => item.open).reverse();
   }, [data?.values]);
+
   const chartData = useMemo(() => {
     return {
       labels: ToDrawlabels,
@@ -165,7 +196,8 @@ export default function ChartGraph() {
             meta.data.forEach((element, index) => {
               const xLabel = xScale.getLabelForValue(index);
               const yLabel = yScale.getLabelForValue(dataset.data[index]);
-              const xPosition = xScale.getPixelForValue(index) - xScale.left; // Adjusting to start from the start of the chart area
+              const xPosition =
+                xScale.getPixelForValue(index) - xScale.left; // Adjusting to start from the start of the chart area
               coordinatesToBeSet.push({
                 label: xLabel,
                 value: yLabel,
@@ -180,6 +212,7 @@ export default function ChartGraph() {
       }
     },
   };
+
   const beforeDrawPlugin: Plugin = {
     beforeRender: () => {
       setLinesLoading(true);
@@ -201,10 +234,28 @@ export default function ChartGraph() {
       {coordinates && !linesLoading && !loading && !chartError && (
         <LinesOverlay orientations={coordinates} />
       )}
+
       {!!chartError && (
         <div className={style.errorMessageContainer}>
-          Error in loading Data, Try changnig the time frame!
+          Error in loading Data, Try changing the time frame!
         </div>
+      )}
+
+      {/* Show toast only when showToast state is true */}
+      {showToast && (
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+          transition={Bounce}
+        />
       )}
     </div>
   );
