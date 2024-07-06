@@ -28,6 +28,8 @@ const App: React.FC = () => {
   const [validPath, setValidPath] = useState(true);
 
   useEffect(() => {
+    console.log('mmmmmmmmmmmmm');
+    
     const checkValidPath = async () => {
       try {
         const response = await fetch(window.location.href);
