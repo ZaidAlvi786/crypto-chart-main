@@ -25,28 +25,25 @@ const routes = [
 const App: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [validPath, setValidPath] = useState(true);
+  const [isValidPath, setIsValidPath] = useState(true);
 
   useEffect(() => {
-    console.log('mmmmmmmmmmmmm');
-    
-    const checkValidPath = async () => {
-      try {
-        const response = await fetch(window.location.href);
-        if (!response.ok) {
-          console.log('pppppppppppppp');
-          
-          setValidPath(false);
-          navigate("/");
-        }
-      } catch (error) {
-        console.error("Error checking path:", error);
-        setValidPath(false);
-        navigate("/");
-      }
+    console.log("mmmmmmmmmmmmm");
+
+    const pathToRegex = (path: string) => {
+      return new RegExp(`^${path.replace(/:\w+/g, "\\w+")}$`);
     };
 
-    checkValidPath();
+    const isPathValid = routes.some(route => pathToRegex(route.path).test(location.pathname));
+
+    console.log(isPathValid, 'Path Validity Check');
+    if (!isPathValid) {
+      console.log("pppppppppppppp");
+      setIsValidPath(false);
+      navigate("/");
+    } else {
+      setIsValidPath(true);
+    }
   }, [location.pathname, navigate]);
 
   return (
@@ -54,7 +51,7 @@ const App: React.FC = () => {
       {routes.map((route, i) => (
         <Route element={route.element} path={route.path} key={i} />
       ))}
-      {!validPath && <Route path="*" element={<Navigate to="/" />} />}
+      {!isValidPath && <Route path="*" element={<Navigate to="/" />} />}
     </Routes>
   );
 };
