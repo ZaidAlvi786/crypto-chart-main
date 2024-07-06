@@ -116,7 +116,10 @@ export default function ChartGraph() {
   
   // Show toast if errorPopup is present
   useEffect(() => {
-    if (errorPopup !== null || data?.status !==null) {
+    if (errorPopup !== null || data?.status =='error') {
+      console.log('yyyyyyyyyyyy');
+      
+      setShowToast(true);
       toast.error(`No data from Twelvedata for the selected ${errorPopup}`, {
         position: "top-right",
         autoClose: 5000,
@@ -128,7 +131,11 @@ export default function ChartGraph() {
         theme: "light",
         transition: Bounce,
       });
-      setShowToast(true); // Show the toast
+       // Show the toast
+    } else{
+      console.log('xxxxxxxxxx');
+      
+      setShowToast(false);
     }
   }, [errorPopup]);
 

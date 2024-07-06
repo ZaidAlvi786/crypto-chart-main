@@ -42,14 +42,17 @@ const App: React.FC = () => {
       pathToRegex(route.path).test(location.pathname)
     );
 
+    console.log(isValidPath,'uuuuuuuuuuuu');
+    
     // Redirect to main page only on refresh and if path is not valid
-   
+    if (!isValidPath && !initialRender.current) {
+      console.log('lllllllll');
+      
+      navigate("/");
+    }
 
     // Update initialRender after first render
     initialRender.current = false;
-    if (!isValidPath && !initialRender.current) {
-      navigate("/");
-    }
   }, [location.pathname, navigate]);
 
   return (
