@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Route, Routes, useLocation, useNavigate, Navigate } from "react-router-dom";
 import Crypto from "./pages/Crypto";
 import Stocks from "./pages/Stocks";
 import RedirectingErrorBoundary from "./components/redirectingErrorBoundary/redirectingErrorBoundary";
@@ -28,17 +28,13 @@ const App: React.FC = () => {
     }
   }, [location.pathname, navigate]);
 
-  const NotFound: React.FC = () => {
-    throw new Error("Page not found");
-  };
-
   return (
     <RedirectingErrorBoundary>
       <Routes>
         {routes.map((route, i) => (
           <Route element={route.element} path={route.path} key={i} />
         ))}
-        {!isValidPath && <Route path="*" element={<NotFound />} />}
+        {!isValidPath && <Route path="*" element={<Navigate to="/" />} />}
       </Routes>
     </RedirectingErrorBoundary>
   );
