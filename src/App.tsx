@@ -29,7 +29,8 @@ const App: React.FC = () => {
 
   useEffect(() => {
     console.log("mmmmmmmmmmmmm");
-
+    console.log(location,'iiiiiiiiqqqqqqqqqqqq');
+    
     const pathToRegex = (path: string) => {
       return new RegExp(`^${path.replace(/:\w+/g, "\\w+")}$`);
     };
