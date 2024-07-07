@@ -29,6 +29,7 @@ import type { ChartOptions } from "chart.js";
 import encodeDates from "../../../utils/formateDateTest";
 import { ToastContainer, toast, Bounce } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import "./index.module.scss"
 Chart.register(
   CategoryScale,
   LinearScale,
@@ -122,7 +123,7 @@ export default function ChartGraph() {
       setShowToast(true);
       toast.error(`No data from Twelvedata for the selected ${errorPopup}`, {
         position: "top-right",
-        autoClose: 5000,
+        autoClose: false,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
@@ -251,18 +252,24 @@ export default function ChartGraph() {
       {/* Show toast only when showToast state is true */}
       {showToast && (
         <ToastContainer
-          position="top-right"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-          transition={Bounce}
-        />
+        style={{ 
+          width: "470px", 
+          height: "250px",
+          fontSize: "28px",
+          fontWeight: "bold" 
+        }}
+        position="top-right"
+        autoClose={false}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        transition={Bounce}
+      />
       )}
     </div>
   );
