@@ -115,6 +115,7 @@ const Stocks = () => {
               setStockSymbol("tsla");
               toast.dismiss();
               setShowToast(false);
+              setStockSearchValue('')
             }}
             style={{ marginLeft: "10px", padding: "5px 10px",borderRadius:"10px", fontSize: "20px",backgroundColor:"#0d99ff",color:"white" }}
           >
@@ -146,6 +147,7 @@ const Stocks = () => {
           setStockSearchValue={setStockSearchValue}
           examples={[...cryptoPageData.searchExamples]}
           metaInfo={cryptoPageData.metaInfo}
+          stockSearchValue={stockSearchValue}
         />
         <Chart
           selectedChart={cryptoPageData.selectedChart}

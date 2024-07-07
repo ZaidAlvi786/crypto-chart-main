@@ -45,6 +45,7 @@ const WhatIfComponent: FC<any> = ({
   examples,
   metaInfo,
   setStockSearchValue,
+  stockSearchValue
 }) => {
   const [buycalendarIsOpen, setBuyCalendarIsOpen] = useState(false);
   const [sellcalendarIsOpen, setSellCalendarIsOpen] = useState(false);
@@ -184,6 +185,11 @@ const WhatIfComponent: FC<any> = ({
       setSearchIsActive(false);
     }
   }, [debouncedSearchTerm]);
+  useEffect(() => {
+    if (stockSearchValue==='') {
+     setQueryInput('')
+    }
+  }, [stockSearchValue === '']);
 
   const handleFilterChange = (e) => {
     setCurrentActiveFilter(e.target.value);
