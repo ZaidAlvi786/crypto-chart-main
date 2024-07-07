@@ -149,7 +149,7 @@ const useChartDataStore = create<ChartDataStore>((set, get) => ({
         const errorMessage = chartdetails.data.message;
       
         set({ chartError: errorMessage });
-        set({ errorPopup: `${stockSymbol}/${exchangeQuery}/${formattedStartDate}` });
+        set({ errorPopup: `${stockSymbol}` });
         
       }
     } catch (error) {
