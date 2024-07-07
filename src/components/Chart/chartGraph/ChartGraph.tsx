@@ -116,29 +116,7 @@ export default function ChartGraph() {
   } = useChartDataStore();
   
   // Show toast if errorPopup is present
-  useEffect(() => {
-    if (errorPopup !== null || data?.status =='error') {
-      console.log('yyyyyyyyyyyy');
-      
-      setShowToast(true);
-      toast.error(`No data from Twelvedata for the selected ${errorPopup}`, {
-        position: "top-right",
-        autoClose: false,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-        transition: Bounce,
-      });
-       // Show the toast
-    } else{
-      console.log('xxxxxxxxxx');
-      
-      setShowToast(false);
-    }
-  }, [errorPopup]);
+
 
   // Handle toast close
   const handleToastClose = () => {
@@ -250,27 +228,7 @@ export default function ChartGraph() {
       )}
 
       {/* Show toast only when showToast state is true */}
-      {showToast && (
-        <ToastContainer
-        style={{ 
-          width: "470px", 
-          height: "250px",
-          fontSize: "28px",
-          fontWeight: "bold" 
-        }}
-        position="top-right"
-        autoClose={false}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-        transition={Bounce}
-      />
-      )}
+      
     </div>
   );
 }
